@@ -1,0 +1,7 @@
+build/
+node_modules/
+test/TestMetaCoin.sol
+test/sampletest.sol
+test/metacoin.js
+contracts_noncompile/
+secrets.json
