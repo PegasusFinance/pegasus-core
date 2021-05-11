@@ -31,10 +31,6 @@ module.exports = {
       timeoutBlocks: 200,  // # of blocks before a deployment times out  (minimum/default: 50)
       skipDryRun: false
     },
-    develop: {
-      defaultEtherBalance: 100000,
-      accounts: 20
-    },
     main: {
       provider: () => new HDWalletProvider(mnemonics, `https://mainnet.infura.io/v3/${projectId}`),
       network_id: 1,       
@@ -43,13 +39,6 @@ module.exports = {
       confirmations: 1,    // # of confs to wait between deployments. (default: 0)
       timeoutBlocks: 200,  // # of blocks before a deployment times out  (minimum/default: 50)
       skipDryRun: false
-    },
-    mumbai: {
-      provider: () => new HDWalletProvider(pk, `https://rpc-mumbai.matic.today`),
-      network_id: 80001,
-      confirmations: 2,
-      timeoutBlocks: 200,
-      skipDryRun: true
     },
     mainnetfork: {
       host: "127.0.0.1",
