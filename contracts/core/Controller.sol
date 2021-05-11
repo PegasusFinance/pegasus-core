@@ -4,13 +4,14 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "./IStrategy.sol";
-import "./IPool.sol";
+import "../interfaces/IStrategy.sol";
+import "../interfaces/IPool.sol";
 
 contract Controller is Ownable {
 
     mapping(address => uint256) public withdrawFee;
     mapping(address => uint256) public interestFee;
+    mapping(address => uint256) public buybackSplit; //ppm
     address public feeCollector = 0x11923d873e2030d45aCe9cfc63B12257205Ee609;
 
     mapping(address => address) public strategy;
@@ -30,6 +31,11 @@ contract Controller is Ownable {
         require(_fee <= 1e18, "More than 100%");
         require(feeCollector != address(0), "Feecollector not set");
         interestFee[_pool] = _fee;
+    }
+
+    function updateBuybackSplit(address _pool, uint256 _split) external onlyOwner {
+        require(feeCollector != address(0), "Feecollector not set");
+        buybackSplit[_pool] = _split;
     }
 
     function updateUniswapRouter(address _uniswapRouter) external onlyOwner {

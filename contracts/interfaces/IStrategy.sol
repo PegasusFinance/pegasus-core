@@ -23,7 +23,8 @@ interface IStrategy {
     function totalLocked() external view returns (uint256);
 
     //Lifecycle functions
-    function pause() external;
+    //Maybe activate in the future?
+    // function pause() external;
 
-    function unpause() external;
+    // function unpause() external;
 }

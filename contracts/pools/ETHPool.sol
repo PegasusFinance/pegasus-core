@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 // SPDX-License-Identifier: MIT
 
 import "./PoolBase.sol";
-import "./IWETH.sol";
+import "../interfaces/IWETH.sol";
 
 contract ETHPool is PoolTokenBase {
     
@@ -34,6 +34,7 @@ contract ETHPool is PoolTokenBase {
         uint256 shares = _calculateShares(convertTo18(msg.value));
 
         weth.deposit{value: msg.value}();
+        //TODO Check if WETH are minted for msg.sender or pool
 
         depositStrategy(msg.value);
         _mint(msg.sender, shares);
@@ -42,8 +43,9 @@ contract ETHPool is PoolTokenBase {
 
     function depositStrategy(uint256 _amount) internal {
 
-        IStrategy strat = IStrategy(controller.strategy(address(this)));
-        strat.deposit(_amount);
+        address strat = controller.strategy(address(this));
+        weth.approve(strat, _amount);
+        IStrategy(strat).deposit(_amount);
 
     }
 
