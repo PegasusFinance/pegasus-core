@@ -18,7 +18,7 @@ abstract contract PoolTokenBase is ERC20 {
     IERC20 public immutable token;
     IController public immutable controller;
 
-    uint256 constant MAX_UINT_VALUE = 2**256 - 1;
+    uint256 constant MAX_UINT_VALUE = ~uint256(0);
 
     event Deposit(address indexed user, uint256 shares, uint256 amount);
     event Withdraw(address indexed user, uint256 shares, uint256 amount);

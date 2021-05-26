@@ -2,11 +2,12 @@ pragma solidity ^0.8.0;
 
 // SPDX-License-Identifier: MIT
 
-import "./RewardBasedPool.sol";
+import "./RewardBasedTokenPool.sol";
 import "../interfaces/IUniswapRouter.sol";
+import "../interfaces/IRewardReciever.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
-contract PegasusPool is RewardBasedPool {
+contract PegasusPool is RewardBasedTokenPool, IRewardReciever {
 
     using SafeERC20 for IERC20;
     using SafeMath for uint;
@@ -17,15 +18,15 @@ contract PegasusPool is RewardBasedPool {
     /**
     In this case, _token should be Pegasus Token, _rewardToken is PEG-BNB-Flip
      */
-    constructor(address _token, address _rewardToken, address _wbnb, address _router) RewardBasedPool(_token, _rewardToken){
+    constructor(address _token, address _rewardToken, address _wbnb, address _router) RewardBasedTokenPool(_token, _rewardToken){
         wbnb = IERC20(_wbnb);
         router = IUniswapV2Router02(_router);
 
-        wbnb.approve(address(router), 2**256-1);
-        IERC20(_rewardToken).approve(address(router), 2**256-1);
+        wbnb.approve(address(router), ~uint(0));
+        IERC20(_rewardToken).approve(address(router), ~uint(0));
     }
 
-    function distribute(uint _rewardBnb) override public {
+    function distribute(uint _rewardBnb) override(RewardBasedPool, IRewardReciever) public {
 
         wbnb.safeTransferFrom(msg.sender, address(this), _rewardBnb);
         //_rewardBnb = wbnb.balanceOf(this);
@@ -44,13 +45,19 @@ contract PegasusPool is RewardBasedPool {
 
     }
 
-    function withdrawReward() override public {
+    function doDistribute(uint _shares) override internal { }
 
-        uint calculatedReward = reward(msg.sender);
-        rewardTally[msg.sender] = stake[msg.sender] * rewardPerToken / 1 ether;
-
+    function doWithdrawReward(uint calculatedReward) override internal {
         router.removeLiquidity(address(wbnb), address(rewardToken), calculatedReward, 0, 0, msg.sender, block.timestamp);
-
     }
+
+    // function withdrawReward() override public {
+
+    //     uint achievedReward = reward(msg.sender);
+    //     rewardTally[msg.sender] = stake[msg.sender] * rewardPerToken / 1 ether;
+
+    //     router.removeLiquidity(address(wbnb), address(rewardToken), achievedReward, 0, 0, msg.sender, block.timestamp);
+
+    // }
 
 }

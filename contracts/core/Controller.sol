@@ -10,7 +10,7 @@ import "../interfaces/IPool.sol";
 contract Controller is Ownable {
 
     mapping(address => uint256) public withdrawFee;
-    mapping(address => uint256) public interestFee;
+    mapping(address => uint256) public interestFee; //ppm
     mapping(address => uint256) public buybackSplit; //ppm
     address public feeCollector = 0x11923d873e2030d45aCe9cfc63B12257205Ee609;
 
@@ -19,7 +19,7 @@ contract Controller is Ownable {
     address public uniswapRouter = 0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D;
     address[] public pools;
 
-    uint constant MAX_VALUE = 2**256 - 1;
+    uint constant MAX_VALUE = ~uint(0);
 
     function updateWithdrawFee(address _pool, uint256 _fee) external onlyOwner {
         require(_fee <= 1e18, "More than 100%");
