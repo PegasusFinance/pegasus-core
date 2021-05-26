@@ -8,6 +8,8 @@ import "./StrategyBase.sol";
 import "../interfaces/IUniswapRouter.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "../interfaces/IBunnyVault.sol";
+import "../interfaces/IBunnyMinterV2.sol";
+import "../interfaces/IBunnyPriceCalculator.sol";
 import "../interfaces/IPool.sol";
 
 abstract contract SingleLiquidityTokenStrategy is StrategyBase {
@@ -69,6 +71,7 @@ abstract contract SingleLiquidityTokenStrategy is StrategyBase {
     function withdrawLiquidity(uint lps) virtual public returns (uint256);
     function withdrawRewards() virtual public returns (uint256);
     function outstandingRewards() virtual public returns (uint256);  //Returns e
+    function outstandingRewardsFeeSubtracted() virtual public returns (uint256);  
 
 }
 
@@ -88,7 +91,6 @@ abstract contract BunnySingleLiquidityStrategy is SingleLiquidityTokenStrategy {
 
     uint256 lastDeposit;
 
-    constructor(address _controller, address _pool, address _bunnypool, address _router) SingleLiquidityTokenStrategy(_controller, _pool){
 
         bunnypool = IBunnyVault(_bunnypool);
         router = IUniswapV2Router01(_router);
@@ -146,8 +148,30 @@ abstract contract BunnySingleLiquidityStrategy is SingleLiquidityTokenStrategy {
     }
 
     function outstandingRewards() override public view returns (uint256){
-        return (bunnypool.earned(address(this)).mul(rewardRatio).div(1 ether));
+        uint256 earned = bunnypool.earned(address(this));
+        uint256 nominalTokenRewards = earned.mul(rewardRatio).div(1 ether);
+
+        //The next part is probably very expensive for the actual effect. Probably just using earned is sufficient
+        IBunnyMinterV2 bunnyMinter = IBunnyMinterV2(bunnypool.minter());
+        IPriceCalculator calculator = IPriceCalculator(bunnyMinter.priceCalculator());
+        (uint256 bnb,) = calculator.valueOfAsset(address(token), (earned - nominalTokenRewards));
+        uint256 outstandingBunny = bunnyMinter.amountBunnyToMint(bnb);
+        // address[] memory arr = new address[](2);
+        // arr[0] = address(bunny);
+        // arr[1] = address(token);
+        // uint256[] memory prices = calculator.pricesInUSD(arr);
+        uint256 bunnyRewardsConverted = 0;//prices[0].mul(1 ether).mul(outstandingBunny).div(prices[1]);
+
+        return (nominalTokenRewards.add(bunnyRewardsConverted));
     }
+
+    function outstandingRewardsFeeSubtracted() override public view returns (uint256){
+
+        uint256 interestFee = controller.interestFee(pool);
+        return outstandingRewards().mul(1000000 - interestFee).div(1000000);
+
+    }
+
 
     uint256 capitalCache = 20; //pp 10k
 

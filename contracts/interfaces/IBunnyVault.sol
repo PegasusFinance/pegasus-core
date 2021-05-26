@@ -19,7 +19,9 @@ interface IBunnyVault {
     function earned(address account) external view returns (uint256);
     function withdrawableBalanceOf(address account) external view returns (uint256);   // BUNNY STAKING POOL ONLY
     function priceShare() external view returns (uint256);
+    function minter() external view returns (address);
 
     function withdrawUnderlying(uint256 _amount) external;
+
 
 }
