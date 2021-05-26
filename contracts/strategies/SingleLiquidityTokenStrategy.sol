@@ -11,18 +11,22 @@ import "../interfaces/IBunnyVault.sol";
 import "../interfaces/IBunnyMinterV2.sol";
 import "../interfaces/IBunnyPriceCalculator.sol";
 import "../interfaces/IPool.sol";
+import "../interfaces/IFeePayable.sol";
 
 abstract contract SingleLiquidityTokenStrategy is StrategyBase {
     
     using SafeERC20 for IERC20;
     using SafeMath for uint256;
 
-    IERC20 token;
+    IERC20 token; //WETH
+
+    IFeePayable rewardSplitter;
 
     uint256 totalLPs;
 
-    constructor(address _controller, address _pool) StrategyBase(_controller, _pool){
+    constructor(address _controller, address _pool, address _rewardSplitter) StrategyBase(_controller, _pool){
         token = IERC20(IPool(_pool).token());
+        rewardSplitter = IFeePayable(_rewardSplitter);
     }
 
     function deposit(uint256 amount) override public {
@@ -67,6 +71,13 @@ abstract contract SingleLiquidityTokenStrategy is StrategyBase {
         token.safeTransfer(address(pool), token.balanceOf(address(this)));
     }
 
+    function sendFees(uint amount) internal {
+        
+        token.safeTransfer(address(rewardSplitter), amount);
+        rewardSplitter.feePaid(pool, 0);
+
+    }
+
     function depositLiquidity(uint amount) virtual public returns (uint256); //Returns amount of LPs
     function withdrawLiquidity(uint lps) virtual public returns (uint256);
     function withdrawRewards() virtual public returns (uint256);
@@ -91,6 +102,7 @@ abstract contract BunnySingleLiquidityStrategy is SingleLiquidityTokenStrategy {
 
     uint256 lastDeposit;
 
+    constructor(address _controller, address _pool, address _bunnypool, address _router, address _rewardSplitter) SingleLiquidityTokenStrategy(_controller, _pool, _rewardSplitter){
 
         bunnypool = IBunnyVault(_bunnypool);
         router = IUniswapV2Router01(_router);
@@ -130,7 +142,15 @@ abstract contract BunnySingleLiquidityStrategy is SingleLiquidityTokenStrategy {
         uint256 before = token.balanceOf(address(this));
         bunnypool.getReward();
         swapBunny();
-        return token.balanceOf(address(this)) - before;
+
+        //Transfer fee
+        uint256 interestFee = controller.interestFee(pool);
+        uint256 withdrawn = token.balanceOf(address(this)) - before;
+        uint256 sumFee = withdrawn.mul(interestFee).div(1000000); //TODO Repalce .div(1m) by / 1m for performance?
+
+        sendFees(sumFee);
+
+        return withdrawn - sumFee;
 
     }
 

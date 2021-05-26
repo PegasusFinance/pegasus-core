@@ -16,7 +16,7 @@ contract ETHPool is PoolTokenBase, RewardBasedPool {
 
     bool canDeposit = true;
 
-    constructor(address _controller, address _weth)
+    constructor(address _controller, address _weth, address _rewardToken)
         PoolTokenBase(_weth, _controller)
     {
         weth = IWETH(_weth);
@@ -29,6 +29,8 @@ contract ETHPool is PoolTokenBase, RewardBasedPool {
 
         depositStrategy(amount);
         _mint(msg.sender, shares);
+
+        depositStake(shares);
         emit Deposit(msg.sender, shares, amount);
     }
 
@@ -40,6 +42,8 @@ contract ETHPool is PoolTokenBase, RewardBasedPool {
 
         depositStrategy(msg.value);
         _mint(msg.sender, shares);
+
+        depositStake(shares);
         emit Deposit(msg.sender, shares, msg.value);
     }
 
@@ -66,6 +70,8 @@ contract ETHPool is PoolTokenBase, RewardBasedPool {
         uint256 amount =
             convertFrom18(sharesAfterFee.mul(convertTo18(totalValue())).div(totalSupply()));
 
+        withdrawStake(shares);
+        
         _burn(msg.sender, sharesAfterFee);
         transferWithdraw(amount, eth);
         emit Withdraw(msg.sender, shares, amount);
@@ -103,6 +109,16 @@ contract ETHPool is PoolTokenBase, RewardBasedPool {
             deposit();
         }
     }
+
+    /**
+    -------  Pegasus Token Reward Overrides --------
+    */
+
+    function doDeposit(uint amount) override internal {
+
+        //Do nothing, since this is implicitly called when depositing
+    }
+
 
 
 }
