@@ -41,7 +41,7 @@ contract PegasusPool is RewardBasedTokenPool, IRewardReciever {
 
         (,, uint lp) = router.addLiquidity(path[0], path[1], _rewardBnb.sub(sellAmount), swappedAmount, 0, 0, address(this), block.timestamp);
 
-        super.distribute(lp);
+        RewardBasedPool.distribute(lp);
 
     }
 
