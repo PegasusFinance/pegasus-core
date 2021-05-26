@@ -2,10 +2,12 @@ pragma solidity ^0.8.0;
 
 // SPDX-License-Identifier: MIT
 
-import "./PoolBase.sol";
+import "./PoolTokenBase.sol";
+import "./RewardBasedPool.sol";
 import "../interfaces/IWETH.sol";
 
-contract ETHPool is PoolTokenBase {
+contract ETHPool is PoolTokenBase, RewardBasedPool {
+    //TODO Check if maybe reimplementing it would be better, since a lot of it is unused
     
     using SafeERC20 for IERC20;
     using SafeMath for uint256;

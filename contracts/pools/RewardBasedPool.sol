@@ -2,29 +2,19 @@ pragma solidity ^0.8.0;
 
 // SPDX-License-Identifier: MIT
 
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-
-contract RewardBasedPool {
-
-    using SafeERC20 for IERC20;
-
-    IERC20 token;
-    IERC20 rewardToken;
+/**
+    Implementing the basic Logic of "Scalable Reward Distribution with Changing Take Sizes" as described in https://solmaz.io/2019/02/24/scalable-reward-changing/
+ */
+abstract contract RewardBasedPool {
 
     uint public totalStake;
     uint public rewardPerToken;
     mapping(address => uint) public stake;
-    mapping(address => uint) public rewardTally;
-
-    constructor(address _token, address _rewardToken) {
-        token = IERC20(_token);
-        rewardToken = IERC20(_rewardToken);
-    }
+    mapping(address => uint) public rewardTally; //Tracks the cumulative rewards NOT distributed to the address, because he didn´t stake yet
 
     function depositStake(uint amount) public {
 
-        token.safeTransferFrom(msg.sender, address(this), amount);
+        doDeposit(amount);
 
         stake[msg.sender] = stake[msg.sender] + amount;
         rewardTally[msg.sender] = rewardTally[msg.sender] + rewardPerToken * amount / 1 ether;
@@ -32,12 +22,19 @@ contract RewardBasedPool {
 
     }
 
-    function distribute(uint _reward) public virtual {
+    function beforeDeposit(uint amount) internal virtual { }
+
+    /* Function to be overriden if necessary. Transfers the deposit tokens at deposit */
+    function doDeposit(uint amount) internal virtual { }
+
+    function distribute(uint _reward) virtual public {
         require(totalStake > 0, "At least one staker has to be in the pool");
 
-        rewardToken.safeTransferFrom(msg.sender, address(this), _reward);
         rewardPerToken = rewardPerToken + _reward * 1 ether / totalStake;
 
+    }
+
+    function doDistribute(uint _reward) internal virtual {
     }
 
     function reward(address addr) public view returns (uint) {
@@ -53,17 +50,21 @@ contract RewardBasedPool {
         stake[msg.sender] = stake[msg.sender] - amount;
         rewardTally[msg.sender] = rewardTally[msg.sender] - rewardPerToken * amount / 1 ether;
         totalStake = totalStake - amount;
-        token.transfer(msg.sender, amount);
+        doWithdrawStake(amount);
 
     }
 
-    function withdrawReward() public virtual {
+    function doWithdrawStake(uint amount) internal virtual {
+    }
+
+    function withdrawReward() public {
 
         uint calculatedReward = reward(msg.sender);
         rewardTally[msg.sender] = stake[msg.sender] * rewardPerToken / 1 ether;
-        rewardToken.transfer(msg.sender, calculatedReward);
-
+        doWithdrawReward(calculatedReward);
     }
+
+    function doWithdrawReward(uint calculatedReward) internal virtual { }
 
     function withdrawAll() public {
         withdrawReward();
