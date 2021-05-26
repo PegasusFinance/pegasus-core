@@ -21,4 +21,11 @@ contract('Controller', function(accounts) {
         assert.equal((await weth.balanceOf(accounts[2])).toString(), ethers.utils.parseEther("0.5").toString(), "Rewards not recieved");
 
     })
+
+    it("RewardSplitterTest", async () => {
+        assert.equal(process.env.NETWORK === "mainnetfork", true, "Network has to be mainnetfork")
+
+        
+
+    }
 })

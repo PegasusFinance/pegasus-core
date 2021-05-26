@@ -35,11 +35,11 @@ contract('Controller', function(accounts) {
         assert.equal((await pool.reward(accounts[0])).toString(), ether.toString(), "Reward not calculated correctly 2");
         assert.equal((await pool.reward(accounts[1])).toString(), ethers.utils.parseEther('1'), "Reward not calculated correctly 3");
 
-        await pool.withdrawReward();
-        assert.equal((await weth2.balanceOf(accounts[0])).toString(), ether.toString(), "Reward not paid out");
-
         await pool.withdrawStake(ether);
         assert.equal((await weth.balanceOf(accounts[0])).toString(), ether.toString(), "Stake Withdrawal not paid out");
+
+        await pool.withdrawReward();
+        assert.equal((await weth2.balanceOf(accounts[0])).toString(), ether.toString(), "Reward not paid out");
 
         await pool.withdrawAll({from: accounts[1]});
         assert.equal((await weth.balanceOf(accounts[1])).toString(), ether.mul(2).toString(), "Reward not paid out withdrawAll()")
