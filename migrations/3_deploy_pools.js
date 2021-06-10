@@ -9,6 +9,8 @@ const WETH = artifacts.require("WETH");
 const data = require("./config.js")
 
 module.exports = async function(deployer, network) {
+    console.log(network)
+    console.log(data.ignorednets)
     if(data.ignorednets.includes(network)) return;
 
     let controller = await Controller.deployed();

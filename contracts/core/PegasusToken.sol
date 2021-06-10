@@ -8,7 +8,7 @@ import "../utils/Whitelist.sol";
 contract PegasusToken is ERC20, Whitelist{
 
     constructor() ERC20("Pegasus Token", "PEGASUS"){
-
+        
     }
 
     function canMint(address addr) public view returns (bool){

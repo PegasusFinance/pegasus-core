@@ -17,7 +17,7 @@ contract RewardSplitter is Ownable, IFeePayable{
     using SafeMath for uint256;
 
     IController controller;
-    IFeePayable distributor;
+    // IFeePayable distributor;
     IUniswapV2Router01 router;
     IRewardReciever rewardReciever;
     IERC20 wbnb;
@@ -37,6 +37,7 @@ contract RewardSplitter is Ownable, IFeePayable{
 
     function _setRewardReciever(address _rewardReciever) public onlyOwner {
         rewardReciever = IRewardReciever(_rewardReciever);
+        wbnb.approve(_rewardReciever, ~uint(0));
     }
 
     // mapping()
@@ -47,6 +48,7 @@ contract RewardSplitter is Ownable, IFeePayable{
 
     function feePaid(address pool, uint256 amountToken) public override /*onlyStrategy */ {
 
+        require(controller.isPool(pool), "Pool not registered in Controller");
         address token = IPool(pool).token();
         swapAllToBnb(token);//, /*amountToken*/);
 
@@ -54,10 +56,15 @@ contract RewardSplitter is Ownable, IFeePayable{
         
         uint256 split = controller.buybackSplit(pool);
         uint256 rewardDistributed = amount.mul(split).div(1000000);
-
-        IERC20(token).transfer(address(distributor), amount - rewardDistributed);
+        
+        address distributor = controller.feeCollector();
+        wbnb.transfer(distributor, amount - rewardDistributed);
         // distributor.feePaid(IPool(pool).token(), amount - rewardDistributed);
 
+        //Distribute into PEG-Pool
+        rewardReciever.distribute(rewardDistributed);
+
+        //Mint PEG for Fee-paying Pool
         uint256 mint = rewardDistributed.mul(controller.PEGperBNB()).div(1e18); //1e18 = 1 wbnb
         minter.mintFor(pool, mint);
 
@@ -70,6 +77,7 @@ contract RewardSplitter is Ownable, IFeePayable{
         path[1] = address(wbnb);
 
         uint256 balance = IERC20(token).balanceOf(address(this));
+        IERC20(token).approve(address(router), balance);
         router.swapExactTokensForTokens(balance, 0, path, address(this), block.timestamp);
 
     }

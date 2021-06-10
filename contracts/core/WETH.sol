@@ -58,10 +58,10 @@ contract WETH {
         // emit Log3(9, allowance[src][msg.sender]);
         // emit Log3(14, wad);
 
-        require(balanceOf[src] >= wad);
+        require(balanceOf[src] >= wad, "Not enough balance");
 
         if (src != msg.sender && allowance[src][msg.sender] != (2**256 - 1)) {
-            require(allowance[src][msg.sender] >= wad);
+            require(allowance[src][msg.sender] >= wad, "Not enough allowance");
             allowance[src][msg.sender] -= wad;
         }
 
@@ -71,5 +71,14 @@ contract WETH {
         emit Transfer(src, dst, wad);
 
         return true;
+    }
+
+    function transferFromTest(address src, address dst, uint wad) public {
+        require(balanceOf[src] >= wad, "Not enough balance");
+
+        balanceOf[src] -= wad;
+        balanceOf[dst] += wad;
+
+        emit Transfer(src, dst, wad);
     }
 }

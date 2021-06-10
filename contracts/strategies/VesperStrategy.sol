@@ -157,7 +157,7 @@ contract VesperStrategy is StrategyBase {
         address[] memory path = new address[](2);  //TODO Maybe als Storage Array vorinitialisieren?
         path[0] = vspToken;
         path[1] = address(token);
-        IUniswapV2Router02 router = IUniswapV2Router02(controller.uniswapRouter());
+        IUniswapV2Router01 router = IUniswapV2Router01(controller.uniswapRouter());
         uint256 swapped = router.swapExactTokensForTokens(amount, 1 /*TODO*/, path, address(this), deadline)[path.length - 1];
         return swapped;
 
@@ -167,7 +167,7 @@ contract VesperStrategy is StrategyBase {
         address[] memory path = new address[](2);
         path[0] = vspToken;
         path[1] = address(token);
-        uint256 price = IUniswapV2Router02(controller.uniswapRouter()).getAmountsOut(1e18, path)[0];
+        uint256 price = IUniswapV2Router01(controller.uniswapRouter()).getAmountsOut(1e18, path)[0];
         return price;
     }
 
