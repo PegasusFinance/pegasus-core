@@ -12,7 +12,7 @@ abstract contract RewardBasedPool {
     mapping(address => uint) public stake;
     mapping(address => uint) public rewardTally; //Tracks the cumulative rewards NOT distributed to the address, because he didn´t stake yet
 
-    function depositStake(uint amount) public {
+    function _depositStake(uint amount) internal {
 
         doDeposit(amount);
 
@@ -22,7 +22,7 @@ abstract contract RewardBasedPool {
 
     }
 
-    function beforeDeposit(uint amount) internal virtual { }
+    // function beforeDeposit(uint amount) internal virtual { }
 
     /* Function to be overriden if necessary. Transfers the deposit tokens at deposit */
     function doDeposit(uint amount) internal virtual { }
@@ -30,6 +30,7 @@ abstract contract RewardBasedPool {
     function distribute(uint _reward) virtual public {
         require(totalStake > 0, "At least one staker has to be in the pool");
 
+        doDistribute(_reward);
         rewardPerToken = rewardPerToken + _reward * 1 ether / totalStake;
 
     }
@@ -43,7 +44,7 @@ abstract contract RewardBasedPool {
 
     }
 
-    function withdrawStake(uint amount) public {
+    function _withdrawStake(uint amount) internal {
 
         require(stake[msg.sender] >= amount, "Cannot withdraw more than staked amount");
 
@@ -68,7 +69,7 @@ abstract contract RewardBasedPool {
 
     function withdrawAll() public {
         withdrawReward();
-        withdrawStake(stake[msg.sender]);
+        _withdrawStake(stake[msg.sender]);
     }
 
 }

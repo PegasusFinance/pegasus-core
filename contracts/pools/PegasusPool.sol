@@ -6,13 +6,14 @@ import "./RewardBasedTokenPool.sol";
 import "../interfaces/IUniswapRouter.sol";
 import "../interfaces/IRewardReciever.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import "hardhat/console.sol";
 
-contract PegasusPool is RewardBasedTokenPool, IRewardReciever {
+contract PegasusPool is IRewardReciever, RewardBasedTokenPool {
 
     using SafeERC20 for IERC20;
     using SafeMath for uint;
 
-    IUniswapV2Router02 router;
+    IUniswapV2Router01 router;
     IERC20 wbnb;
 
     /**
@@ -20,13 +21,14 @@ contract PegasusPool is RewardBasedTokenPool, IRewardReciever {
      */
     constructor(address _token, address _rewardToken, address _wbnb, address _router) RewardBasedTokenPool(_token, _rewardToken){
         wbnb = IERC20(_wbnb);
-        router = IUniswapV2Router02(_router);
+        router = IUniswapV2Router01(_router);
 
         wbnb.approve(address(router), ~uint(0));
-        IERC20(_rewardToken).approve(address(router), ~uint(0));
+        rewardToken.approve(address(router), ~uint(0));
+        stakingToken.approve(address(router), ~uint(0));
     }
 
-    function distribute(uint _rewardBnb) override(RewardBasedPool, IRewardReciever) public {
+    function distribute(uint _rewardBnb) override(IRewardReciever, RewardBasedPool) public {
 
         wbnb.safeTransferFrom(msg.sender, address(this), _rewardBnb);
         //_rewardBnb = wbnb.balanceOf(this);
@@ -35,20 +37,31 @@ contract PegasusPool is RewardBasedTokenPool, IRewardReciever {
 
         address[] memory path = new address[](2);
         path[0] = address(wbnb);
-        path[1] = address(rewardToken);
+        path[1] = address(stakingToken);
 
         uint swappedAmount = router.swapExactTokensForTokens(sellAmount, 0, path, address(this), block.timestamp)[path.length - 1];
 
         (,, uint lp) = router.addLiquidity(path[0], path[1], _rewardBnb.sub(sellAmount), swappedAmount, 0, 0, address(this), block.timestamp);
 
-        RewardBasedPool.distribute(lp);
+        require(rewardToken.balanceOf(address(this)) >= lp, "LPs didnt get distributed"); //TODO Remove, since Pancakerouter can be trusted
+
+        //Call super
+        super.distribute(lp);
 
     }
 
     function doDistribute(uint _shares) override internal { }
 
     function doWithdrawReward(uint calculatedReward) override internal {
-        router.removeLiquidity(address(wbnb), address(rewardToken), calculatedReward, 0, 0, msg.sender, block.timestamp);
+        router.removeLiquidity(address(wbnb), address(stakingToken), calculatedReward, 0, 0, msg.sender, block.timestamp);
+    }
+
+    function depositStake(uint amount) public {
+        _depositStake(amount);
+    }
+
+    function withdrawStake(uint amount) public {
+        _withdrawStake(amount);
     }
 
     // function withdrawReward() override public {

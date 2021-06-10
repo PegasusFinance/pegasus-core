@@ -1,3 +1,17 @@
+/**
+
+ _____                                 ______ _                            
+|  __ \                               |  ____(_)                           
+| |__) |__  __ _  __ _ ___ _   _ ___  | |__   _ _ __   __ _ _ __   ___ ___ 
+|  ___/ _ \/ _` |/ _` / __| | | / __| |  __| | | '_ \ / _` | '_ \ / __/ _ \
+| |  |  __/ (_| | (_| \__ \ |_| \__ \ | |    | | | | | (_| | | | | (_|  __/
+|_|   \___|\__, |\__,_|___/\__,_|___/ |_|    |_|_| |_|\__,_|_| |_|\___\___|
+            __/ |                                                          
+           |___/                                                           
+
+
+ */
+
 pragma solidity ^0.8.0;
 
 // SPDX-License-Identifier: MIT
@@ -30,7 +44,7 @@ contract ETHPool is PoolTokenBase, RewardBasedPool {
         depositStrategy(amount);
         _mint(msg.sender, shares);
 
-        depositStake(shares);
+        _depositStake(shares);
         emit Deposit(msg.sender, shares, amount);
     }
 
@@ -43,7 +57,7 @@ contract ETHPool is PoolTokenBase, RewardBasedPool {
         depositStrategy(msg.value);
         _mint(msg.sender, shares);
 
-        depositStake(shares);
+        _depositStake(shares);
         emit Deposit(msg.sender, shares, msg.value);
     }
 
@@ -70,7 +84,7 @@ contract ETHPool is PoolTokenBase, RewardBasedPool {
         uint256 amount =
             convertFrom18(sharesAfterFee.mul(convertTo18(totalValue())).div(totalSupply()));
 
-        withdrawStake(shares);
+        _withdrawStake(shares);
         
         _burn(msg.sender, sharesAfterFee);
         transferWithdraw(amount, eth);
