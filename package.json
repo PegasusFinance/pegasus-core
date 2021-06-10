@@ -7,14 +7,33 @@
     "test": "test"
   },
   "dependencies": {
+    "@nomiclabs/hardhat-ethers": "^2.0.2",
     "@openzeppelin/contracts": "^4.0.0",
     "eth-gas-reporter": "^0.2.22",
     "ethers": "^5.0.32",
     "truffle-contract-size": "^2.0.1"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "@nomiclabs/hardhat-waffle": "^2.0.1",
+    "@typechain/ethers-v5": "^7.0.0",
+    "@typechain/hardhat": "^2.0.1",
+    "@typechain/truffle-v5": "^5.0.0",
+    "@types/chai": "^4.2.18",
+    "@types/mocha": "^8.2.2",
+    "chai": "^4.3.4",
+    "ethereum-waffle": "^3.3.0",
+    "hardhat": "^2.3.0",
+    "mocha": "^8.4.0",
+    "ts-node": "^10.0.0",
+    "typechain": "^5.0.0",
+    "typescript": "^4.3.2"
+  },
   "scripts": {
-    "test": "mocha"
+    "generate-types": "typechain --target=truffle-v5 --out-dir ./typechain 'build/contracts/*.json'",
+    "test": "waffle && mocha -r ts-node/register --timeout 500000 'test/**/*.test.ts'",
+    "testonly": " mocha -r ts-node/register --timeout 500000 'test/**/*.test.ts'",
+    "build": "waffle",
+    "compile": "waffle && typechain --target=truffle-v5 --out-dir ./typechain 'build/contracts/*.json'"
   },
   "author": "",
   "license": "ISC"

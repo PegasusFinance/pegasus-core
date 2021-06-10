@@ -1,7 +1,15 @@
 build/
+build2/
+flattened/
 node_modules/
+typechain/
 test/TestMetaCoin.sol
 test/sampletest.sol
 test/metacoin.js
 contracts_noncompile/
 secrets.json
+node_modules2/
+artifacts/
+artifacts_hardhat/
+.idea/
+cache/
